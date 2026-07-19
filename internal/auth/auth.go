@@ -35,7 +35,8 @@ func (a *AuthService) GenerateToken(workspace string) string {
 func (a *AuthService) GenerateOTP() string {
 	b := make([]byte, 4)
 	rand.Read(b)
-	code := fmt.Sprintf("%06d", int(b[0])%1000000)
+	val := uint32(b[0])<<24 | uint32(b[1])<<16 | uint32(b[2])<<8 | uint32(b[3])
+	code := fmt.Sprintf("%06d", val%1000000)
 	return code
 }
 

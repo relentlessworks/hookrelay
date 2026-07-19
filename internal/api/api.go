@@ -397,8 +397,7 @@ func (s *Server) handleListEndpoints(w http.ResponseWriter, r *http.Request, wor
 		return
 	}
 	for _, ep := range endpoints {
-		deliveries, _ := s.store.ListDeliveries(ep.Handle, workspace, 10000)
-		deliveryCount := len(deliveries)
+		deliveryCount := s.store.CountDeliveries(ep.Handle, workspace)
 		desc := ep.Description
 		if desc == "" {
 			desc = "-"
@@ -430,8 +429,7 @@ func (s *Server) handleGetEndpoint(w http.ResponseWriter, r *http.Request, works
 		return
 	}
 
-	deliveries, _ := s.store.ListDeliveries(ep.Handle, workspace, 10000)
-	deliveryCount := len(deliveries)
+	deliveryCount := s.store.CountDeliveries(ep.Handle, workspace)
 	desc := ep.Description
 	if desc == "" {
 		desc = "-"

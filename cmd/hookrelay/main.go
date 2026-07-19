@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/relentlessworks/hookrelay/internal/api"
 	"github.com/relentlessworks/hookrelay/internal/auth"
@@ -45,8 +49,29 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", srv.Router)
 
+	httpServer := &http.Server{
+		Addr:    *addr,
+		Handler: mux,
+	}
+
+	// Graceful shutdown on SIGINT/SIGTERM
+	go func() {
+		sigCh := make(chan os.Signal, 1)
+		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+		<-sigCh
+		log.Printf("HookRelay shutting down...")
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := httpServer.Shutdown(ctx); err != nil {
+			log.Printf("shutdown error: %v", err)
+		}
+	}()
+
 	log.Printf("HookRelay listening on %s", *addr)
-	if err := http.ListenAndServe(*addr, mux); err != nil {
+	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("server error: %v", err)
 	}
+
+	log.Printf("HookRelay stopped")
 }

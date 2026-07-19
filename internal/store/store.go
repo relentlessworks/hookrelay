@@ -245,6 +245,19 @@ func (s *Store) ListDeliveries(endpointHandle, workspace string, limit int) ([]*
 	return deliveries, nil
 }
 
+// CountDeliveries returns the number of deliveries for a given endpoint.
+func (s *Store) CountDeliveries(endpointHandle, workspace string) int {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	count := 0
+	for _, d := range s.data.Deliveries {
+		if d.Workspace == workspace && d.EndpointHandle == endpointHandle {
+			count++
+		}
+	}
+	return count
+}
+
 // --- Token operations ---
 
 func (s *Store) CreateToken(value, workspace string, expiresAt time.Time) error {
